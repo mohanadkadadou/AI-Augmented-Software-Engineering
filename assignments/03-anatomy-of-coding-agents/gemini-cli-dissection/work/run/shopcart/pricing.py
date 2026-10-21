@@ -31,8 +31,24 @@ def apply_tax(amount_cents: int) -> int:
     return round(amount_cents * (1 + TAX_RATE))
 
 
+def calculate_shipping(subtotal_cents: int) -> int:
+    """Return shipping fee in cents.
+    - Flat $5.99 (599 cents) shipping fee.
+    - Free shipping when subtotal after discount, before tax is $50.00 or more (>= 5000).
+    - An empty cart pays no shipping (subtotal == 0).
+    - Shipping is not taxed.
+    """
+    if subtotal_cents == 0:
+        return 0
+    if subtotal_cents >= 5000:
+        return 0
+    return 599
+
+
 def final_total(subtotal_cents: int, code: str | None = None) -> int:
     """Total the customer pays for a given subtotal and optional discount code."""
     # Discount is applied before tax, per store policy.
-    taxed = apply_tax(subtotal_cents)
-    return apply_discount(taxed, code)
+    discounted = apply_discount(subtotal_cents, code)
+    taxed = apply_tax(discounted)
+    shipping = calculate_shipping(discounted)
+    return taxed + shipping
